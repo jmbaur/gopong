@@ -60,7 +60,7 @@ func main() {
 	height := totalHeight - totalHeight/10
 
 	root := document.Call("getElementById", "root")
-	root.Get("style").Call("setProperty", "margin", "auto")
+	// root.Get("style").Call("setProperty", "margin", "auto")
 	root.Get("style").Call("setProperty", "position", "relative")
 	root.Get("style").Call("setProperty", "background-color", "#222222")
 	root.Get("style").Call("setProperty", "width", width)
@@ -71,7 +71,7 @@ func main() {
 		y:       height / 2,
 		width:   ballDiameter,
 		height:  ballDiameter,
-		speed:   0.0,
+		speed:   5.0,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
@@ -93,11 +93,9 @@ func main() {
 	paddle.element.Get("style").Call("setProperty", "background-color", "#ff0000")
 	paddle.update()
 
-	fmt.Println("window", height)
 	window.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		e := args[0]
 		keyCode := e.Get("keyCode").Int()
-		fmt.Println("keycode", keyCode)
 		var paddleEdge float64
 		var delta float64
 		switch keyCode {
@@ -132,7 +130,7 @@ func main() {
 			fmt.Println("YOU LOSE")
 			os.Exit(0)
 		}
-		if x+ballRadius >= width {
+		if x+ballRadius >= width || x-ballRadius <= paddle.x+(paddle.width/2) {
 			// collision with right wall
 			if ball.angle > 0 {
 				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
