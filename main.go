@@ -1,22 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
-	"os"
 	"syscall/js"
 	"time"
 )
 
 const (
-	ballDiameter = 30               // pixels
-	ballRadius   = ballDiameter / 2 // pixels
-	paddleWidth  = 30               // pixels
-	paddleHeight = 150              // pixels
-	paddleStep   = 10               // pixels
-	paddleBorder = 20               // pixels
+	paddleWidth  = 30
+	paddleHeight = 150
+	paddleStep   = 10
+	paddleBorder = 15
 	bounceFactor = 1
-	refreshRate  = 1000 / 60 // Hz
+	ballDiameter = 30
+	ballRadius   = ballDiameter / 2
+	refreshRate  = 1000 / 60 * time.Millisecond
 )
 
 var (
@@ -53,26 +53,34 @@ func main() {
 	document := js.Global().Get("document")
 	window := js.Global().Get("window")
 
-	totalWidth := window.Get("innerWidth").Float()
-	totalHeight := window.Get("innerHeight").Float()
-	width := totalWidth - totalWidth/10
-	height := totalHeight - totalHeight/10
+	width := window.Get("innerWidth").Float()
+	height := window.Get("innerHeight").Float()
+	var side float64
+	if width > height {
+		side = height
+	} else {
+		side = width
+	}
+	side -= side / 15
 
 	root := document.Call("getElementById", "root")
-	// root.Get("style").Call("setProperty", "margin", "auto")
-	root.Get("style").Call("setProperty", "position", "relative")
-	root.Get("style").Call("setProperty", "background-color", "#222222")
-	root.Get("style").Call("setProperty", "width", width)
-	root.Get("style").Call("setProperty", "height", height)
+	root.Get("style").Call("setProperty", "width", side)
+	root.Get("style").Call("setProperty", "height", side)
+
+	fmt.Println(side)
+	fmt.Println((side - 1000) / 1000)
 
 	message := document.Call("getElementById", "message")
+	score := document.Call("getElementById", "score")
+    scoreCount := 0
+    score.Set("innerHTML", scoreCount)
 
 	ball := &entity{
-		x:       width / 2,
-		y:       height / 2,
+		x:       side / 2,
+		y:       side / 2,
 		width:   ballDiameter,
 		height:  ballDiameter,
-		speed:   5.0,
+		speed:   10.0,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
@@ -80,8 +88,8 @@ func main() {
 
 	paddle := &entity{
 		x:       paddleBorder * 2,
-		y:       height / 2,
-		speed:   15.0,
+		y:       side / 2,
+		speed:   25.0,
 		angle:   0.0,
 		width:   paddleWidth,
 		height:  paddleHeight,
@@ -112,7 +120,7 @@ func main() {
 			paddleEdge = paddle.y - paddleStep - (paddle.height / 2)
 			delta = paddleStep * -1
 		}
-		if 0 < paddleEdge && paddleEdge < height {
+		if 0 < paddleEdge && paddleEdge < side {
 			paddle.y += delta
 			paddle.update()
 		}
@@ -124,6 +132,7 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 	message.Get("style").Call("setProperty", "visibility", "hidden")
+    score.Get("style").Call("setProperty", "visibility", "visible")
 
 	for {
 		x, y := ball.getNextPosition()
@@ -131,7 +140,7 @@ func main() {
 			// collision with left wall
 			message.Set("innerHTML", "Game Over")
 			message.Get("style").Call("setProperty", "visibility", "visible")
-			os.Exit(0)
+            break
 		}
 		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
 			// collision with paddle
@@ -139,21 +148,23 @@ func main() {
 			// ball hit the paddle.
 			bounceScale := -1 * (paddle.y - y) / (paddle.height / 2)
 			ball.angle = (bounceScale * 45) * (math.Pi / 180)
-		} else if x+ballRadius >= width {
+            scoreCount++
+            score.Set("innerHTML", scoreCount)
+		} else if x+ballRadius >= side {
 			// collision with right wall
 			if ball.angle > 0 {
 				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
 			} else {
 				ball.angle = ball.angle - math.Pi - (2 * ball.angle)
 			}
-		} else if y-ballRadius <= 0 || y+ballRadius >= height {
+		} else if y-ballRadius <= 0 || y+ballRadius >= side {
 			// collision with top or bottom wall
 			ball.angle = ball.angle * -1
 		}
 		ball.x = x
 		ball.y = y
 		ball.update()
-		time.Sleep(refreshRate * time.Millisecond)
+		time.Sleep(refreshRate)
 	}
 
 	<-c

@@ -13,12 +13,32 @@
     </script>
   </head>
   <style>
-    #message {
-      padding: 10rem;
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #root {
+      position: relative;
+      background-color: #222222;
+    }
+    p {
       text-align: center;
       font-family: monospace;
-      font-size: 3rem;
+      font-size: 4rem;
       color: white;
+    }
+    #message {
+      padding: 10rem;
+    }
+    #score {
+      position: absolute;
+      margin: 0;
+      color: #ffff00;
+      padding: 1rem;
+      top: 0;
+      right: 0;
+      visibility: hidden;
     }
     #ball {
       position: absolute;
@@ -32,6 +52,7 @@
   </style>
   <body>
     <div id="root">
+      <p id="score"></p>
       <p id="message"></p>
       <div id="ball"></div>
       <div id="paddle"></div>
