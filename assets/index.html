@@ -12,8 +12,27 @@
       });
     </script>
   </head>
+  <style>
+    #message {
+      padding: 10rem;
+      text-align: center;
+      font-family: monospace;
+      font-size: 3rem;
+      color: white;
+    }
+    #ball {
+      position: absolute;
+      background-color: #00ff00;
+      border-radius: 50%;
+    }
+    #paddle {
+      position: absolute;
+      background-color: #ff0000;
+    }
+  </style>
   <body>
     <div id="root">
+      <p id="message"></p>
       <div id="ball"></div>
       <div id="paddle"></div>
     </div>

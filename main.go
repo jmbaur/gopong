@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"os"
@@ -29,12 +28,11 @@ type entity struct {
 	element                           js.Value
 }
 
-func (e *entity) update() error {
+func (e *entity) update() {
 	e.element.Get("style").Call("setProperty", "left", e.x-(e.width/2))
 	e.element.Get("style").Call("setProperty", "top", e.y-(e.height/2))
 	e.element.Get("style").Call("setProperty", "width", e.width)
 	e.element.Get("style").Call("setProperty", "height", e.height)
-	return nil
 }
 
 func (e *entity) getNextPosition() (x, y float64) {
@@ -67,6 +65,8 @@ func main() {
 	root.Get("style").Call("setProperty", "width", width)
 	root.Get("style").Call("setProperty", "height", height)
 
+	message := document.Call("getElementById", "message")
+
 	ball := &entity{
 		x:       width / 2,
 		y:       height / 2,
@@ -76,9 +76,6 @@ func main() {
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
-	ball.element.Get("style").Call("setProperty", "position", "absolute")
-	ball.element.Get("style").Call("setProperty", "background-color", "#00ff00")
-	ball.element.Get("style").Call("setProperty", "border-radius", "50%")
 	ball.update()
 
 	paddle := &entity{
@@ -90,8 +87,6 @@ func main() {
 		height:  paddleHeight,
 		element: document.Call("getElementById", "paddle"),
 	}
-	paddle.element.Get("style").Call("setProperty", "position", "absolute")
-	paddle.element.Get("style").Call("setProperty", "background-color", "#ff0000")
 	paddle.update()
 
 	window.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -124,11 +119,18 @@ func main() {
 		return nil
 	}))
 
+	for i := 3; i > 0; i-- {
+		message.Set("innerHTML", i)
+		time.Sleep(1 * time.Second)
+	}
+	message.Get("style").Call("setProperty", "visibility", "hidden")
+
 	for {
 		x, y := ball.getNextPosition()
 		if x-ballRadius <= 0 {
 			// collision with left wall
-			fmt.Println("YOU LOSE")
+			message.Set("innerHTML", "Game Over")
+			message.Get("style").Call("setProperty", "visibility", "visible")
 			os.Exit(0)
 		}
 		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
