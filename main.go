@@ -10,9 +10,13 @@ import (
 )
 
 const (
-	ballDiameter = 40 // pixels
-	ballRadius   = ballDiameter / 2
-	refreshRate  = 1000 / 60 // Hz
+	ballDiameter = 30               // pixels
+	ballRadius   = ballDiameter / 2 // pixels
+	paddleWidth  = 30               // pixels
+	paddleHeight = 150              // pixels
+	paddleStep   = 10               // pixels
+	paddleBorder = 20               // pixels
+	refreshRate  = 1000 / 60        // Hz
 )
 
 var (
@@ -27,6 +31,8 @@ type entity struct {
 func (e *entity) update() error {
 	e.element.Get("style").Call("setProperty", "left", e.x-(e.width/2))
 	e.element.Get("style").Call("setProperty", "top", e.y-(e.height/2))
+	e.element.Get("style").Call("setProperty", "width", e.width)
+	e.element.Get("style").Call("setProperty", "height", e.height)
 	return nil
 }
 
@@ -61,32 +67,63 @@ func main() {
 	root.Get("style").Call("setProperty", "height", height)
 
 	ball := &entity{
-		x:       (width) / 2,
-		y:       (height) / 2,
+		x:       width / 2,
+		y:       height / 2,
 		width:   ballDiameter,
 		height:  ballDiameter,
-		speed:   12.0,
+		speed:   0.0,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
 	ball.element.Get("style").Call("setProperty", "position", "absolute")
 	ball.element.Get("style").Call("setProperty", "background-color", "#00ff00")
-	ball.element.Get("style").Call("setProperty", "width", ballDiameter)
-	ball.element.Get("style").Call("setProperty", "height", ballDiameter)
 	ball.element.Get("style").Call("setProperty", "border-radius", "50%")
 	ball.update()
 
-	// paddle := &entity{
-	// 	x:       0,
-	// 	y:       0,
-	// 	speed:   2.0,
-	// 	angle:   0.0,
-	// 	element: document.Call("getElementById", "paddle"),
-	// }
-	// paddle.element.Get("style").Call("setProperty", "position", "absolute")
-	// paddle.element.Get("style").Call("setProperty", "background-color", "#ff0000")
-	// paddle.element.Get("style").Call("setProperty", "width", "2em")
-	// paddle.element.Get("style").Call("setProperty", "height", "10em")
+	paddle := &entity{
+		x:       paddleBorder * 2,
+		y:       height / 2,
+		speed:   10.0,
+		angle:   0.0,
+		width:   paddleWidth,
+		height:  paddleHeight,
+		element: document.Call("getElementById", "paddle"),
+	}
+	paddle.element.Get("style").Call("setProperty", "position", "absolute")
+	paddle.element.Get("style").Call("setProperty", "background-color", "#ff0000")
+	paddle.update()
+
+	fmt.Println("window", height)
+	window.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		e := args[0]
+		keyCode := e.Get("keyCode").Int()
+		fmt.Println("keycode", keyCode)
+		var paddleEdge float64
+		var delta float64
+		switch keyCode {
+		case 34:
+			fallthrough
+		case 40:
+			fallthrough
+		case 74:
+			// down
+			paddleEdge = paddle.y + paddleStep + (paddle.height / 2)
+			delta = paddleStep
+		case 33:
+			fallthrough
+		case 38:
+			fallthrough
+		case 75:
+			// up
+			paddleEdge = paddle.y - paddleStep - (paddle.height / 2)
+			delta = paddleStep * -1
+		}
+		if 0 < paddleEdge && paddleEdge < height {
+			paddle.y += delta
+			paddle.update()
+		}
+		return nil
+	}))
 
 	for {
 		x, y := ball.getNextPosition()
