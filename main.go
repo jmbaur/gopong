@@ -130,7 +130,15 @@ func main() {
 			fmt.Println("YOU LOSE")
 			os.Exit(0)
 		}
-		if x+ballRadius >= width || x-ballRadius <= paddle.x+(paddle.width/2) {
+		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
+			// TODO: use ball collision spot with paddle to determine new angle
+			if ball.angle > 0 {
+				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
+			} else {
+				ball.angle = ball.angle - math.Pi - (2 * ball.angle)
+			}
+		}
+		if x+ballRadius >= width {
 			// collision with right wall
 			if ball.angle > 0 {
 				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
