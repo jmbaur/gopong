@@ -11,6 +11,7 @@ import (
 
 const (
 	ballDiameter = 40 // pixels
+	ballRadius   = ballDiameter / 2
 	refreshRate  = (1000 / 60) * time.Millisecond
 )
 
@@ -19,14 +20,14 @@ var (
 )
 
 type entity struct {
-	x, y, speed, angle float64
-	element            js.Value
+	x, y, speed, angle, width, height float64
+	element                           js.Value
 }
 
 func (e *entity) update() error {
 	fmt.Println(e.x, e.y)
-	e.element.Get("style").Call("setProperty", "left", e.x)
-	e.element.Get("style").Call("setProperty", "top", e.y)
+	e.element.Get("style").Call("setProperty", "left", e.x-(e.width/2))
+	e.element.Get("style").Call("setProperty", "top", e.y-(e.height/2))
 	return nil
 }
 
@@ -40,8 +41,8 @@ func main() {
 	c := make(chan bool)
 
 	rand.Seed(time.Now().UnixNano())
-    // Get a random initial angle for the ball where it will be moving away
-    // from the paddle within a 90 degree window.
+	// Get a random initial angle for the ball where it will be moving away
+	// from the paddle within a 90 degree window.
 	ballTheta0 = ((rand.Float64() * 90) - 45) * math.Pi / 180
 
 	document := js.Global().Get("document")
@@ -52,9 +53,11 @@ func main() {
 	fmt.Println("width", width, "height", height)
 
 	ball := &entity{
-		x:       (width - ballDiameter) / 2,
-		y:       (height - ballDiameter) / 2,
-		speed:   3.0,
+		x:       (width) / 2,
+		y:       (height) / 2,
+		width:   ballDiameter,
+		height:  ballDiameter,
+		speed:   10.0,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
@@ -80,19 +83,19 @@ func main() {
 	for {
 		x, y := ball.getNextPosition()
 		// TODO: check that ball hasn't collided
-		if x-ballDiameter <= 0 {
+		if x-ballRadius <= 0 {
 			fmt.Println("collide with left side of wall")
 			os.Exit(0)
 		}
-		if x+ballDiameter >= width {
+		if x+ballRadius >= width {
 			fmt.Println("collide with right side of wall")
 			os.Exit(0)
 		}
-		if y-ballDiameter <= 0 {
+		if y-ballRadius <= 0 {
 			fmt.Println("collide with top side of wall")
 			os.Exit(0)
 		}
-		if y+ballDiameter >= height {
+		if y+ballRadius >= height {
 			fmt.Println("collide with bottom side of wall")
 			os.Exit(0)
 		}
