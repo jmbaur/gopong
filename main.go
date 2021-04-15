@@ -133,6 +133,8 @@ func main() {
 		}
 		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
 			// collision with paddle
+			// Calculate an angle within a 90 degree window based on where the
+			// ball hit the paddle.
 			bounceScale := -1 * (paddle.y - y) / (paddle.height / 2)
 			ball.angle = (bounceScale * 45) * (math.Pi / 180)
 		} else if x+ballRadius >= width {
