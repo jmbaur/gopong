@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"syscall/js"
@@ -9,18 +8,17 @@ import (
 )
 
 const (
-	paddleWidth  = 30
-	paddleHeight = 150
-	paddleStep   = 10
-	paddleBorder = 15
-	bounceFactor = 1
-	ballDiameter = 30
+	paddleWidth  = 5
+	paddleHeight = 20
+	ballDiameter = 4
 	ballRadius   = ballDiameter / 2
 	refreshRate  = 1000 / 60 * time.Millisecond
 )
 
 var (
-	ballTheta0 float64
+	ballTheta0  float64
+	ballSpeed   = 0.8
+	paddleSpeed = 4.0
 )
 
 type entity struct {
@@ -39,6 +37,23 @@ func (e *entity) getNextPosition() (x, y float64) {
 	deltaX := e.speed * math.Cos(e.angle)
 	deltaY := e.speed * math.Sin(e.angle)
 	return e.x + deltaX, e.y + deltaY
+}
+
+func closestDivisibleNumber(n int, m int) int {
+    q := n / m
+    n1 := m * q
+
+    var n2 int
+    if n * m > 0 {
+        n2 = m * (q + 1)
+    } else {
+        n2 = m * (q - 1)
+    }
+
+    if math.Abs(float64(n - n1)) < math.Abs(float64(n - n2)) {
+        return n1
+    }
+    return n2
 }
 
 func main() {
@@ -61,38 +76,35 @@ func main() {
 	} else {
 		side = width
 	}
-	side -= side / 15
+    side = side * 0.95
 
 	root := document.Call("getElementById", "root")
 	root.Get("style").Call("setProperty", "width", side)
 	root.Get("style").Call("setProperty", "height", side)
 
-	fmt.Println(side)
-	fmt.Println((side - 1000) / 1000)
-
 	message := document.Call("getElementById", "message")
 	score := document.Call("getElementById", "score")
-    scoreCount := 0
-    score.Set("innerHTML", scoreCount)
+	scoreCount := 0
+	score.Set("innerHTML", scoreCount)
 
 	ball := &entity{
 		x:       side / 2,
 		y:       side / 2,
-		width:   ballDiameter,
-		height:  ballDiameter,
-		speed:   10.0,
+		width:   side / 30,
+		height:  side / 30,
+		speed:   side / 100,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
 	ball.update()
 
 	paddle := &entity{
-		x:       paddleBorder * 2,
+		x:       side/75 + ((side / 25)/2),
 		y:       side / 2,
-		speed:   25.0,
+		speed:   side / 100,
 		angle:   0.0,
-		width:   paddleWidth,
-		height:  paddleHeight,
+		width:   side / 25,
+		height:  side / 6,
 		element: document.Call("getElementById", "paddle"),
 	}
 	paddle.update()
@@ -109,16 +121,16 @@ func main() {
 			fallthrough
 		case 74:
 			// down
-			paddleEdge = paddle.y + paddleStep + (paddle.height / 2)
-			delta = paddleStep
+			paddleEdge = paddle.y + paddle.speed + (paddle.height / 2)
+			delta = paddle.speed
 		case 33:
 			fallthrough
 		case 38:
 			fallthrough
 		case 75:
 			// up
-			paddleEdge = paddle.y - paddleStep - (paddle.height / 2)
-			delta = paddleStep * -1
+			paddleEdge = paddle.y - paddle.speed - (paddle.height / 2)
+			delta = paddle.speed * -1
 		}
 		if 0 < paddleEdge && paddleEdge < side {
 			paddle.y += delta
@@ -132,7 +144,7 @@ func main() {
 		time.Sleep(1 * time.Second)
 	}
 	message.Get("style").Call("setProperty", "visibility", "hidden")
-    score.Get("style").Call("setProperty", "visibility", "visible")
+	score.Get("style").Call("setProperty", "visibility", "visible")
 
 	for {
 		x, y := ball.getNextPosition()
@@ -140,7 +152,7 @@ func main() {
 			// collision with left wall
 			message.Set("innerHTML", "Game Over")
 			message.Get("style").Call("setProperty", "visibility", "visible")
-            break
+			break
 		}
 		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
 			// collision with paddle
@@ -148,8 +160,8 @@ func main() {
 			// ball hit the paddle.
 			bounceScale := -1 * (paddle.y - y) / (paddle.height / 2)
 			ball.angle = (bounceScale * 45) * (math.Pi / 180)
-            scoreCount++
-            score.Set("innerHTML", scoreCount)
+			scoreCount++
+			score.Set("innerHTML", scoreCount)
 		} else if x+ballRadius >= side {
 			// collision with right wall
 			if ball.angle > 0 {
