@@ -16,7 +16,8 @@ const (
 	paddleHeight = 150              // pixels
 	paddleStep   = 10               // pixels
 	paddleBorder = 20               // pixels
-	refreshRate  = 1000 / 60        // Hz
+	bounceFactor = 1
+	refreshRate  = 1000 / 60 // Hz
 )
 
 var (
@@ -83,7 +84,7 @@ func main() {
 	paddle := &entity{
 		x:       paddleBorder * 2,
 		y:       height / 2,
-		speed:   10.0,
+		speed:   15.0,
 		angle:   0.0,
 		width:   paddleWidth,
 		height:  paddleHeight,
@@ -125,20 +126,16 @@ func main() {
 
 	for {
 		x, y := ball.getNextPosition()
-		// collision with left wall
 		if x-ballRadius <= 0 {
+			// collision with left wall
 			fmt.Println("YOU LOSE")
 			os.Exit(0)
 		}
 		if x-ballRadius <= paddle.x+(paddle.width/2) && (paddle.y-(paddle.height/2)) < y && y < (paddle.y+(paddle.height/2)) {
-			// TODO: use ball collision spot with paddle to determine new angle
-			if ball.angle > 0 {
-				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
-			} else {
-				ball.angle = ball.angle - math.Pi - (2 * ball.angle)
-			}
-		}
-		if x+ballRadius >= width {
+			// collision with paddle
+			bounceScale := -1 * (paddle.y - y) / (paddle.height / 2)
+			ball.angle = (bounceScale * 45) * (math.Pi / 180)
+		} else if x+ballRadius >= width {
 			// collision with right wall
 			if ball.angle > 0 {
 				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
