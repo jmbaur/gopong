@@ -12,7 +12,7 @@ import (
 const (
 	ballDiameter = 40 // pixels
 	ballRadius   = ballDiameter / 2
-	refreshRate  = (1000 / 60) * time.Millisecond
+	refreshRate  = 1000 / 60 // Hz
 )
 
 var (
@@ -48,8 +48,17 @@ func main() {
 	document := js.Global().Get("document")
 	window := js.Global().Get("window")
 
-    width := window.Get("innerWidth").Float()
-    height := window.Get("innerHeight").Float()
+	totalWidth := window.Get("innerWidth").Float()
+	totalHeight := window.Get("innerHeight").Float()
+	width := totalWidth - totalWidth/10
+	height := totalHeight - totalHeight/10
+
+	root := document.Call("getElementById", "root")
+	root.Get("style").Call("setProperty", "margin", "auto")
+	root.Get("style").Call("setProperty", "position", "relative")
+	root.Get("style").Call("setProperty", "background-color", "#222222")
+	root.Get("style").Call("setProperty", "width", width)
+	root.Get("style").Call("setProperty", "height", height)
 
 	ball := &entity{
 		x:       (width) / 2,
@@ -81,26 +90,26 @@ func main() {
 
 	for {
 		x, y := ball.getNextPosition()
-        // collision with left wall
+		// collision with left wall
 		if x-ballRadius <= 0 {
 			fmt.Println("YOU LOSE")
-            os.Exit(0)
+			os.Exit(0)
 		}
 		if x+ballRadius >= width {
-            // collision with right wall
-            if ball.angle > 0 {
-                ball.angle  = ball.angle + math.Pi - (2 * ball.angle)
-            } else {
-                ball.angle  = ball.angle - math.Pi - (2 * ball.angle)
-            }
+			// collision with right wall
+			if ball.angle > 0 {
+				ball.angle = ball.angle + math.Pi - (2 * ball.angle)
+			} else {
+				ball.angle = ball.angle - math.Pi - (2 * ball.angle)
+			}
 		} else if y-ballRadius <= 0 || y+ballRadius >= height {
-            // collision with top or bottom wall
-            ball.angle  = ball.angle * -1
+			// collision with top or bottom wall
+			ball.angle = ball.angle * -1
 		}
 		ball.x = x
 		ball.y = y
 		ball.update()
-		time.Sleep(refreshRate)
+		time.Sleep(refreshRate * time.Millisecond)
 	}
 
 	<-c
