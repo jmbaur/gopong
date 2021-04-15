@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"syscall/js"
@@ -8,17 +9,15 @@ import (
 )
 
 const (
-	paddleWidth  = 5
-	paddleHeight = 20
-	ballDiameter = 4
-	ballRadius   = ballDiameter / 2
-	refreshRate  = 1000 / 60 * time.Millisecond
+	ballSpeedRatio      = 0.005
+	ballSpeedMultiplier = 1.05
+	ballDiameterRatio   = 0.03
+	paddleSpeedRatio    = 0.02
+	refreshRate         = 1000 / 60 * time.Millisecond
 )
 
 var (
-	ballTheta0  float64
-	ballSpeed   = 0.8
-	paddleSpeed = 4.0
+	ballTheta0 float64
 )
 
 type entity struct {
@@ -40,20 +39,20 @@ func (e *entity) getNextPosition() (x, y float64) {
 }
 
 func closestDivisibleNumber(n int, m int) int {
-    q := n / m
-    n1 := m * q
+	q := n / m
+	n1 := m * q
 
-    var n2 int
-    if n * m > 0 {
-        n2 = m * (q + 1)
-    } else {
-        n2 = m * (q - 1)
-    }
+	var n2 int
+	if n*m > 0 {
+		n2 = m * (q + 1)
+	} else {
+		n2 = m * (q - 1)
+	}
 
-    if math.Abs(float64(n - n1)) < math.Abs(float64(n - n2)) {
-        return n1
-    }
-    return n2
+	if math.Abs(float64(n-n1)) < math.Abs(float64(n-n2)) {
+		return n1
+	}
+	return n2
 }
 
 func main() {
@@ -76,7 +75,7 @@ func main() {
 	} else {
 		side = width
 	}
-    side = side * 0.95
+	side = side * 0.95
 
 	root := document.Call("getElementById", "root")
 	root.Get("style").Call("setProperty", "width", side)
@@ -90,18 +89,20 @@ func main() {
 	ball := &entity{
 		x:       side / 2,
 		y:       side / 2,
-		width:   side / 30,
-		height:  side / 30,
-		speed:   side / 100,
+		width:   side * ballDiameterRatio,
+		height:  side * ballDiameterRatio,
+		speed:   side * ballSpeedRatio,
 		angle:   ballTheta0,
 		element: document.Call("getElementById", "ball"),
 	}
+	fmt.Println(ball.width)
+	ballRadius := ball.width / 2
 	ball.update()
 
 	paddle := &entity{
-		x:       side/75 + ((side / 25)/2),
+		x:       side/75 + ((side / 25) / 2),
 		y:       side / 2,
-		speed:   side / 100,
+		speed:   side * paddleSpeedRatio,
 		angle:   0.0,
 		width:   side / 25,
 		height:  side / 6,
@@ -145,7 +146,6 @@ func main() {
 	}
 	message.Get("style").Call("setProperty", "visibility", "hidden")
 	score.Get("style").Call("setProperty", "visibility", "visible")
-
 	for {
 		x, y := ball.getNextPosition()
 		if x-ballRadius <= 0 {
@@ -162,6 +162,7 @@ func main() {
 			ball.angle = (bounceScale * 45) * (math.Pi / 180)
 			scoreCount++
 			score.Set("innerHTML", scoreCount)
+			ball.speed = ball.speed * ballSpeedMultiplier
 		} else if x+ballRadius >= side {
 			// collision with right wall
 			if ball.angle > 0 {
