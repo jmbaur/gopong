@@ -1,22 +1,48 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
-func main() {
-	build := exec.Command("go", "build", "-o", "assets/main.wasm", "pong/main.go")
-	build.Env = append(os.Environ(), []string{"GOOS=js", "GOARCH=wasm"}...)
-	build.Stdout = os.Stdout
-	build.Stderr = os.Stderr
-	if err := build.Run(); err != nil {
-		log.Fatal(err)
+var modtime time.Time
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	base := filepath.Base(r.URL.Path)
+
+	var filename string
+	if base == "/" {
+		filename = "index.html"
+	} else if strings.HasSuffix(base, "wasm") {
+		w.Header().Add("Content-Encoding", "gzip")
+		w.Header().Add("Content-Type", "application/wasm")
+		filename = fmt.Sprintf("%s.gz", base)
+	} else {
+		filename = base
 	}
 
-	http.Handle("/", http.FileServer(http.Dir("assets")))
-	log.Println("running on port 8000")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	location := fmt.Sprintf("assets/%s", filename)
+	file, err := os.Open(location)
+	if err != nil {
+		log.Printf("could not find file %s: %v", location, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	http.ServeContent(w, r, filename, modtime, file)
+}
+
+func main() {
+	host := flag.String("host", ":8000", "ip and port to run server on")
+	flag.Parse()
+
+	http.HandleFunc("/", handler)
+	log.Printf("running on host %s\n", *host)
+	log.Fatal(http.ListenAndServe(*host, nil))
 }
