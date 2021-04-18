@@ -5,7 +5,7 @@
 		<script>
 			const go = new Go();
 			WebAssembly.instantiateStreaming(
-				fetch("main.wasm"),
+				fetch("main.wasm.gz"),
 				go.importObject
 			).then((result) => {
 				go.run(result.instance);

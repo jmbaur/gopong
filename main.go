@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -19,12 +18,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var filename string
 	if base == "/" {
 		filename = "index.html"
-	} else if strings.HasSuffix(base, "wasm") {
-		w.Header().Add("Content-Encoding", "gzip")
-		w.Header().Add("Content-Type", "application/wasm")
-		filename = fmt.Sprintf("%s.gz", base)
 	} else {
 		filename = base
+	}
+
+	if filename == "main.wasm.gz" {
+		w.Header().Add("Content-Type", "application/wasm")
+		w.Header().Add("Content-Encoding", "gzip")
 	}
 
 	location := fmt.Sprintf("assets/%s", filename)
