@@ -13,4 +13,3 @@ server:
 
 clean:
 	rm -rf bin/
-	rm -rf assets/main.wasm

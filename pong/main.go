@@ -13,7 +13,7 @@ const (
 	ballSpeedMultiplier = 1.05
 	ballDiameterRatio   = 0.03
 	paddleSpeedRatio    = 0.02
-	refreshRate         = 1000 / 120 * time.Millisecond
+	refreshRate         = 1000 / 60 * time.Millisecond
 )
 
 var (
