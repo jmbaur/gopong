@@ -21,10 +21,6 @@ var (
 	side       float64
 )
 
-type entity interface {
-	update()
-}
-
 type pongBall struct {
 	x, y, speed, angle, width, height float64
 	element                           js.Value
@@ -140,6 +136,8 @@ func main() {
 	root.Get("style").Call("setProperty", "width", side)
 	root.Get("style").Call("setProperty", "height", side)
 
+	dashboard := document.Call("getElementById", "dashboard")
+
 	message := document.Call("getElementById", "message")
 	fps := document.Call("getElementById", "fps")
 	fps.Set("innerHTML", fmt.Sprintf("%d Hz", frameRate))
@@ -185,8 +183,7 @@ func main() {
 	}
 
 	message.Get("style").Call("setProperty", "visibility", "hidden")
-	score.Get("style").Call("setProperty", "visibility", "visible")
-	fps.Get("style").Call("setProperty", "visibility", "visible")
+	dashboard.Get("style").Call("setProperty", "visibility", "visible")
 
 	for {
 		x, y := ball.getNextPosition()
