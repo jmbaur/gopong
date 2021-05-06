@@ -1,5 +1,9 @@
 # GoPong
 
+## Requirements
+
+- Golang (https://golang.org/dl)
+
 ## Building the WASM
 
 ```
